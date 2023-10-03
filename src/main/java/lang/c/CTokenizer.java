@@ -92,6 +92,13 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 						startCol = colNo - 1;
 						text.append(ch);
 						state = 4;
+					}else if (ch == '-') {
+						startCol = colNo - 1;
+						text.append(ch);
+						state = 5;
+					}else if (ch == '/') {
+						startCol = colNo - 1;
+						state = 101;
 					} else { // ヘンな文字を読んだ
 						startCol = colNo - 1;
 						text.append(ch);
@@ -120,6 +127,54 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 				case 4: // +を読んだ
 					tk = new CToken(CToken.TK_PLUS, lineNo, startCol, "+");
 					accept = true;
+					break;
+				case 5: // -を読んだ
+					tk = new CToken(CToken.TK_MINUS, lineNo, startCol, "-");
+					accept = true;
+					break;
+				case 101: // /を読んだ
+					ch = readChar();
+					if (ch == (char) -1) { // EOF
+						state = 1;
+					}else if (ch == '/') {
+						state = 102;
+					} else if (ch == '*') {
+						state = 103;
+					}else{
+						state = 2;
+					}
+					break;
+				case 102: // /を2連続で読んだ
+					ch = readChar();
+					if (ch == (char) -1) { // EOF
+						state = 1;
+					}else if (ch == '\n') { //改行
+						state = 0;
+					}else{
+						state = 102;
+					}
+					break;
+				case 103: // /*を読んだ
+					ch = readChar();
+					if (ch == (char) -1) { // EOF
+						state = 1;
+					}else if (ch == '*') { 
+						state = 104;
+					}else{
+						state = 103;
+					}
+					break;
+				case 104: // /**を読んだ
+					ch = readChar();
+					if (ch == (char) -1) { // EOF
+						state = 1;
+					}else if (ch == '/') { 
+						state = 0;
+					}else if (ch == '*') { 
+						state = 104;
+					}else{ // 閉じていないコメントはEOFが出るはず
+						state = 1;
+					}
 					break;
 			}
 		}
