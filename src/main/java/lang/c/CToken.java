@@ -39,6 +39,9 @@ public class CToken extends SimpleToken {
 	public static final int TK_LCUR		= 27;	// {
 	public static final int TK_RCUR		= 28;	// }
 
+	public static final int TK_SLASH	= 29;	// /
+	public static final int TK_ASTER	= 30;	// *
+
 
 
 	public static final String TRUE_NUM = "0x0001";
