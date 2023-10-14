@@ -29,8 +29,8 @@ class ExpressionAdd extends CParseRule {
 		// +の次の字句を読む
 		CToken tk = ct.getNextToken(pcx);
 		if (Term.isFirst(tk)) {
-			right = new Term(pcx);
-			right.parse(pcx);
+			right = new Term(pcx); //TermクラスはCparseRuleクラスのextend
+			right.parse(pcx); // Termのparseチェック
 		} else {
 			pcx.fatalError(tk.toExplainString() + "+の後ろはtermです");
 		}
@@ -38,17 +38,18 @@ class ExpressionAdd extends CParseRule {
 
 	public void semanticCheck(CParseContext pcx) throws FatalErrorException {
 		// 足し算の型計算規則
-		final int s[][] = {
-				// T_err T_int
-				{ CType.T_err, CType.T_err }, // T_err
-				{ CType.T_err, CType.T_int }, // T_int
+		final int s[][] = { // Ctype_hogeはint型 例えばs[0][0]はltが0かつrtが0だからerr
+				// T_err T_int T_pint
+				{ CType.T_err, CType.T_err, CType.T_err }, // T_err
+				{ CType.T_err, CType.T_int, CType.T_pint }, // T_int
+				{ CType.T_err, CType.T_pint, CType.T_err}, // T_pint
 		};
 		if (left != null && right != null) {
 			left.semanticCheck(pcx);
 			right.semanticCheck(pcx);
 			int lt = left.getCType().getType(); // +の左辺の型
 			int rt = right.getCType().getType(); // +の右辺の型
-			int nt = s[lt][rt]; // 規則による型計算
+			int nt = s[lt][rt]; // 規則による型計算 s[lt][rt] は、左辺が lt 型であり、右辺が rt 型である場合の結果の型を示す
 			if (nt == CType.T_err) {
 				pcx.fatalError(op.toExplainString() + "左辺の型[" + left.getCType().toString() + "]と右辺の型["
 						+ right.getCType().toString() + "]は足せません");

@@ -13,6 +13,8 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 	private char backCh;
 	private boolean backChExist = false;
 
+	private boolean isMinus; //追加
+
 	public CTokenizer(CTokenRule rule) {
 		this.rule = rule;
 		lineNo = 1;
@@ -76,6 +78,7 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 
 		int state = 0;
 		boolean accept = false;
+		int digit_count = 0;
 		while (!accept) {
 			switch (state) {
 				case 0: // 初期状態
@@ -84,7 +87,11 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					} else if (ch == (char) -1) { // EOF
 						startCol = colNo - 1;
 						state = 1;
-					} else if (ch >= '0' && ch <= '9') {
+					} else if (ch == '0') { // 16 or 8
+						startCol = colNo - 1;
+						text.append(ch);
+						state = 201;
+					} else if (ch >= '1' && ch <= '9') { // 10
 						startCol = colNo - 1;
 						text.append(ch);
 						state = 3;
@@ -92,13 +99,16 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 						startCol = colNo - 1;
 						text.append(ch);
 						state = 4;
-					}else if (ch == '-') {
+					} else if (ch == '-') {
 						startCol = colNo - 1;
 						text.append(ch);
 						state = 5;
-					}else if (ch == '/') {
+					} else if (ch == '/') {
 						startCol = colNo - 1;
 						state = 101;
+					} else if (ch == '&') {
+						startCol = colNo - 1;
+						state = 6;
 					} else { // ヘンな文字を読んだ
 						startCol = colNo - 1;
 						text.append(ch);
@@ -113,15 +123,38 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					tk = new CToken(CToken.TK_ILL, lineNo, startCol, text.toString());
 					accept = true;
 					break;
-				case 3: // 数（10進数）の開始
+				case 3: // 10進数
 					ch = readChar();
-					if (Character.isDigit(ch)) {
+					if (ch >= '0' && ch <= '9') {
 						text.append(ch);
-					} else {
-						// 数の終わり
-						backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+					} else if (ch >= 'a' && ch <= 'f') { // 例えば123a4のとき
+						backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）// これを入れることでaがappendされるようになった
 						tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
 						accept = true;
+						text.append(ch);
+						state = 2;
+					}else {
+						// 数の終わり
+						String text_string = text.toString();
+						int text_int = Integer.parseInt(text_string);
+						if(!isMinus){
+							if(text_int <= 32767){
+								backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+								tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+								accept = true;
+							} else {
+								state = 2;
+							}
+						}else{
+							if(text_int <= 32768){
+								backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+								tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+								isMinus = false;
+								accept = true;
+							} else {
+								state = 2;
+							}
+						}
 					}
 					break;
 				case 4: // +を読んだ
@@ -130,6 +163,11 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					break;
 				case 5: // -を読んだ
 					tk = new CToken(CToken.TK_MINUS, lineNo, startCol, "-");
+					isMinus = true;
+					accept = true;
+					break;
+				case 6: // &を読んだ
+					tk = new CToken(CToken.TK_AMP, lineNo, startCol, "&");
 					accept = true;
 					break;
 				case 101: // /を読んだ
@@ -175,6 +213,98 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					}else{ // 閉じていないコメントはEOFが出るはず
 						state = 1;
 					}
+					break;
+				case 201: // 16進数 or 8進数
+					ch = readChar();
+					digit_count = 0; // 8進数のために桁数リセット
+					if (ch == 'x') { // 16
+						text.append(ch);
+						state = 204;
+					}else if (ch == '1') { // 8
+						digit_count++;
+						text.append(ch);
+						state = 202;
+					}else if (ch >= '2' && ch <= '7') { // 8
+						digit_count++;
+						text.append(ch);
+						state = 203;
+					} else { // 0
+						backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+						tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+						accept = true;
+					}
+					break;
+				case 202: // 8進数 最上位が1 0177777が最大
+					ch = readChar();
+					if(digit_count <= 6){
+						if (ch >= '0' && ch <= '7') {
+							digit_count++;
+							text.append(ch);
+						} else {
+							// 数の終わり
+							backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+							tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+							accept = true;
+						}
+				    }else{
+						state = 2;
+					}
+					break;
+				case 203: // 8進数 最上位が1 0177777が最大
+					ch = readChar();
+					if(digit_count <= 5){
+						if (ch >= '0' && ch <= '7') {
+							digit_count++;
+							text.append(ch);
+						} else {
+							// 数の終わり
+							backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+							tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+							accept = true;
+						}
+				    }else{
+						state = 2;
+					}
+					break;
+				case 204: // 16進数
+					ch = readChar();
+					digit_count = 0;
+					if (ch >= '1' && ch <= '9' || ch >= 'a' && ch <= 'f') {
+						digit_count++;
+						text.append(ch);
+						state = 205;
+					} else if(ch == '0') { //0x0
+						text.append(ch);
+						state = 206;
+					} else { // 想定外
+						state = 2;
+					}
+					break;
+				case 205: // 16進数
+					ch = readChar();
+					if(digit_count <= 4){
+						if (ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'f') {
+							digit_count++;
+							text.append(ch);
+						} else {
+							// 数の終わり
+							backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+							tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+							accept = true;
+						}
+				    }else{
+						state = 2;
+					}	
+					break;
+				case 206: // 16進数
+					ch = readChar();
+					if (ch >= '1' && ch <= '9' || ch >= 'a' && ch <= 'f') { //0x0...
+						state = 1;
+				    }else{ // 0x0
+						backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+						tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+						accept = true;
+					}	
 					break;
 			}
 		}

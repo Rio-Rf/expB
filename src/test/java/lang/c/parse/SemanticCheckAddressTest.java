@@ -5,6 +5,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.fail;
 
+// import java.beans.Expression; //こいつのせいで問題が発生していた
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,18 +16,17 @@ import lang.IOContext;
 import lang.InputStreamForTest;
 import lang.PrintStreamForTest;
 import lang.c.CParseContext;
-import lang.c.CParseRule;
 import lang.c.CToken;
 import lang.c.CTokenRule;
 import lang.c.CTokenizer;
-import lang.c.CType;
 
 /**
  * Before Testing Semantic Check by using this testing class, All ParseTest must be passed.
  * Bacause this testing class uses parse method to create testing data.
  */
-public class SemanticCheckProgramTest_cv02 {
-
+public class SemanticCheckAddressTest {
+    // Test that Condition node's semanticCheck is valid.
+    
     InputStreamForTest inputStream;
     PrintStreamForTest outputStream;
     PrintStreamForTest errorOutputStream;
@@ -58,139 +59,128 @@ public class SemanticCheckProgramTest_cv02 {
         setUp();
     }
 
+    // TestCase02.c を見てどれが正当でどれが不当か考えて以下テストコードの
+    // testDataArr に追加してください．
+    // Add 意味解析 正当
     @Test
-    public void ExpressionAddTypeNoError() throws FatalErrorException {
-        String[] testDataArr = {"1+1", "&1+1", "1+&1"};
+    public void semanticCheckAddressAddAccept() throws FatalErrorException {
+        String[] testDataArr = { "2 + 1", "2 + &1", "&2 + 1" };
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat(Expression.isFirst(firstToken), is(true));
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
             Expression cp = new Expression(cpContext);
-            cp.parse(cpContext);
-    
-            cp.semanticCheck(cpContext);
-            String errorOutput = errorOutputStream.getPrintBufferString();
-            assertThat(errorOutput, is(""));
-        }
-    }
 
-    @Test
-    public void FactorAmpNoError() throws FatalErrorException {
-        inputStream.setInputString("&100");
-        CToken firstToken = tokenizer.getNextToken(cpContext);
-        assertThat(FactorAmp.isFirst(firstToken), is(true));
-        FactorAmp cp = new FactorAmp(cpContext);
-        cp.parse(cpContext);
-
-        cp.semanticCheck(cpContext);
-        assertThat(cp.getCType().getType(), is(CType.T_pint));
-        String errorOutput = errorOutputStream.getPrintBufferString();
-        assertThat(errorOutput, is(""));
-    }
-
-    @Test
-    public void FactorWithAmpOverflow() throws FatalErrorException {
-        String[] testDataArr = {"&65536", "&0200000", "&0x10000"};
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Factor.isFirst(firstToken), is(true));
-            Factor cp = new Factor(cpContext);
             try {
                 cp.parse(cpContext);
                 cp.semanticCheck(cpContext);
-                fail("Failed with " + testData);
             } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("&の後ろはnumberです"));
-            }    
-        }
+                fail("Failed with " + testData + ". Please modify this Testcase to pass.");
+            }
+        } 
     }
-    
+
+    // Add 意味解析 不当
     @Test
-    public void FactorWithPlusSignOverflow() throws FatalErrorException {
-        String[] testDataArr = {"32768"};
+    public void semanticCheckAddressAddError()  {
+        String[] testDataArr = { "&2 + &1" };
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Factor.isFirst(firstToken), is(false));
-            Factor cp = new Factor(cpContext);
-            try {
-                cp.parse(cpContext);
-                cp.semanticCheck(cpContext);
-                fail("Failed with " + testData);
-            } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("不正なfactorです"));
-            }    
-        }
-    }
-    
-    @Test
-    public void FactorWithMinuSignMax() throws FatalErrorException {
-        String[] testDataArr = {"13-32769"}; // 負数の構文の代わりに減算で確認
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true)); // 第三引数は第二引数isFirst()の期待される結果
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
             Expression cp = new Expression(cpContext);
+
             try {
                 cp.parse(cpContext);
                 cp.semanticCheck(cpContext);
+                fail("Failed with " + testData + ". FatalErrorException should be invoked");
             } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("-の後ろはtermです"));
-            }    
-        }
+                assertThat(e.getMessage(), containsString("左辺の型[int*]と右辺の型[int*]は足せません"));
+            }
+        } 
     }
 
+    // Sub 意味解析 正当
     @Test
-    public void FactorWithPlusSignMax() throws FatalErrorException {
-        String[] testDataArr = {"32767"};
+    public void semanticCheckAddressSubAccept() throws FatalErrorException {
+        String[] testDataArr = { "2 - 1", "&2 - 1", "&2 - &1" };
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Succeeded with " + testData, Factor.isFirst(firstToken), is(true));
-            Factor cp = new Factor(cpContext);
-            try {
-                cp.parse(cpContext);
-                cp.semanticCheck(cpContext);
-            } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("不正なfactorです"));
-            }    
-        }
-    }
-
-    @Test
-    public void FactorWithMinusSignMax() throws FatalErrorException {
-        String[] testDataArr = {"13-32768"}; // 負数の構文の代わりに減算で確認
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Succeeded with " + testData, Expression.isFirst(firstToken), is(true));
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
             Expression cp = new Expression(cpContext);
+
             try {
                 cp.parse(cpContext);
                 cp.semanticCheck(cpContext);
             } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("不正factorです"));
-            }    
-        }
+                fail("Failed with " + testData + ". Please modify this Testcase to pass.");
+            }
+        } 
     }
 
+    // Sub 意味解析 不当
     @Test
-    public void ExpressionSubNoError() throws FatalErrorException {
-        inputStream.setInputString("13-32768"); // 負数の構文の代わりに減算で確認
-        CToken firstToken = tokenizer.getNextToken(cpContext);
-        assertThat(Expression.isFirst(firstToken), is(true));
-        CParseRule cp = new Expression(cpContext);
-        cp.parse(cpContext);
+    public void semanticCheckAddressSubError()  {
+        String[] testDataArr = { "2 - &1" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
+            Expression cp = new Expression(cpContext);
 
-        cp.semanticCheck(cpContext);
-        String errorOutput = errorOutputStream.getPrintBufferString();
-        assertThat(errorOutput, is(""));
+            try {
+                cp.parse(cpContext);
+                cp.semanticCheck(cpContext);
+                fail("Failed with " + testData + ". FatalErrorException should be invoked");
+            } catch ( FatalErrorException e ) {
+                assertThat(e.getMessage(), containsString("左辺の型[int]から右辺の型[int*]は引けません"));
+            }
+        } 
+    }
+    
+    // Sub 意味解析 正当 EX
+    @Test
+    public void semanticCheckAddressSubAcceptEX() throws FatalErrorException {
+        String[] testDataArr = { "&3 - 1 - &1" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
+            Expression cp = new Expression(cpContext);
+
+            try {
+                cp.parse(cpContext);
+                cp.semanticCheck(cpContext);
+            } catch ( FatalErrorException e ) {
+                fail("Failed with " + testData + ". Please modify this Testcase to pass.");
+            }
+        } 
+    }
+
+    // Sub 意味解析 不当 EX
+    @Test
+    public void semanticCheckAddressSubErrorEX()  {
+        String[] testDataArr = { "&3 - &1 - &1" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
+            Expression cp = new Expression(cpContext);
+
+            try {
+                cp.parse(cpContext);
+                cp.semanticCheck(cpContext);
+                fail("Failed with " + testData + ". FatalErrorException should be invoked");
+            } catch ( FatalErrorException e ) {
+                assertThat(e.getMessage(), containsString("左辺の型[int]から右辺の型[int*]は引けません"));
+            }
+        } 
     }
 }

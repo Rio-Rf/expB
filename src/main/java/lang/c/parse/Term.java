@@ -19,7 +19,7 @@ public class Term extends CParseRule {
 	public void parse(CParseContext pcx) throws FatalErrorException {
 		// ここにやってくるときは、必ずisFirst()が満たされている
 		factor = new Factor(pcx);
-		factor.parse(pcx);
+		factor.parse(pcx); //factorのparseチェック
 	}
 
 	public void semanticCheck(CParseContext pcx) throws FatalErrorException {

@@ -76,6 +76,25 @@ public class CTokenizerNumberTest_cv02 {
 
     // Please copy and paste the above code and add the specified test case to the following
     // ここに追加するテストケース："0xfffff", "0xffgf"
+    @Test
+    public void hexNumberError0xfffff() {
+        String testString = "0xfffff";
+        inputStream.setInputString(testString);
+        CToken token = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token ", token, CToken.TK_ILL, "0xfffff", 1, 1);
+    }
+
+    @Test
+    public void hexNumberError0xffgf() {
+        String testString = "0xffgf";
+        inputStream.setInputString(testString);
+        CToken token1 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token 1", token1, CToken.TK_NUM, "0xff", 1, 1);
+        CToken token2 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token ", token2, CToken.TK_ILL, "g", 1, 5);
+        CToken token3 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token ", token3, CToken.TK_ILL, "f", 1, 6);
+    }
 
     @Test
     public void hexNumberError0x() {
@@ -118,7 +137,53 @@ public class CTokenizerNumberTest_cv02 {
 
     // Please copy and paste the above code and add the specified test case to the following
     // ここに追加するテストケース："0277777", "01786"
+    @Test
+    public void octalNumberError0277777() {
+        String testString = "0277777";
+        inputStream.setInputString(testString);
+        CToken token = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token ", token, CToken.TK_ILL, "0277777", 1, 1);
+    }
+
+    @Test
+    public void octalNumberError01786() {
+        String testString = "01786";
+        inputStream.setInputString(testString);
+        CToken token1 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token 1", token1, CToken.TK_NUM, "017", 1, 1);
+        CToken token2 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token 2", token2, CToken.TK_NUM, "86", 1, 4);
+    }
 
     // 10進数
     // ここに追加するテストケース："32767", "32768", "123a4"
+    @Test
+    public void decimalNumberMax() {
+        String testString = "32767";
+        inputStream.setInputString(testString);
+        CToken token1 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token 1", token1, CToken.TK_NUM, "32767", 1, 1);
+        CToken token2 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token 2", token2, CToken.TK_EOF, "end_of_file", 1, 6);
+    }
+
+    @Test
+    public void decimalNumberError32768() {
+        String testString = "32768";
+        inputStream.setInputString(testString);
+        CToken token = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token ", token, CToken.TK_ILL, "32768", 1, 1);
+    }
+
+    @Test
+    public void decimalNumberError123a4() {
+        String testString = "123a4";
+        inputStream.setInputString(testString);
+        CToken token1 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token 1", token1, CToken.TK_NUM, "123", 1, 1);
+        CToken token2 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token 2", token2, CToken.TK_ILL, "a", 1, 4);
+        CToken token3 = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token 3", token3, CToken.TK_NUM, "4", 1, 5);
+    }
 }
