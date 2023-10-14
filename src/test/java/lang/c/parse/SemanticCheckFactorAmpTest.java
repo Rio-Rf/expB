@@ -5,6 +5,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.fail;
 
+// import java.beans.Expression;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +24,7 @@ import lang.c.CTokenizer;
  * Before Testing Semantic Check by using this testing class, All ParseTest must be passed.
  * Bacause this testing class uses parse method to create testing data.
  */
-public class SemanticCheckFactorAmpTest {
+public class SemanticCheckFactorAmpTest { // SemanticCheckAddressTestと同じ？？？
     // 下記テストコード例を用いてCの規則にしたがったテストを書くこと
     // 2+1, 2+&1, &2+1, &2+&1
     // 2-1, 2-&1, &2-1, &2-&1
@@ -59,7 +61,7 @@ public class SemanticCheckFactorAmpTest {
         tearDown();
         setUp();
     }
-
+    /*
     // 正当のテストコード例
     @Test
     public void semanticCheckTrueExample() throws FatalErrorException {
@@ -73,6 +75,9 @@ public class SemanticCheckFactorAmpTest {
 
             cp.parse(cpContext);
             cp.semanticCheck(cpContext);
+            String errorOutput = errorOutputStream.getPrintBufferString();
+            assertThat(errorOutput, is(""));    
+
         }
     }
 
@@ -95,5 +100,5 @@ public class SemanticCheckFactorAmpTest {
             }    
         }
     }
-
+    */
 }

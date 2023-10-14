@@ -30,7 +30,7 @@ class ExpressionSub extends CParseRule {
 		CToken tk = ct.getNextToken(pcx);
 		if (Term.isFirst(tk)) {//tkが数字かどうかを判別
 			right = new Term(pcx);
-			right.parse(pcx);
+			right.parse(pcx); // Termのparseチェック
 		} else {
 			pcx.fatalError(tk.toExplainString() + "-の後ろはtermです");
 		}
@@ -39,9 +39,10 @@ class ExpressionSub extends CParseRule {
 	public void semanticCheck(CParseContext pcx) throws FatalErrorException {
 		// 引き算の型計算規則
 		final int s[][] = {
-				// T_err T_int
-				{ CType.T_err, CType.T_err }, // T_err
-				{ CType.T_err, CType.T_int }, // T_int
+				// T_err T_int T_pint
+				{ CType.T_err, CType.T_err, CType.T_err }, // T_err
+				{ CType.T_err, CType.T_int, CType.T_err }, // T_int
+				{ CType.T_err, CType.T_pint, CType.T_int}, // T_pint
 		};
 		if (left != null && right != null) {
 			left.semanticCheck(pcx);
