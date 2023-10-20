@@ -168,11 +168,19 @@ public class CTokenizerNumberTest_cv02 {
     }
 
     @Test
-    public void decimalNumberError32768() {
+    public void decimalNumber32768() {
         String testString = "32768";
         inputStream.setInputString(testString);
         CToken token = tokenizer.getNextToken(cpContext);
-        helper.checkToken("token ", token, CToken.TK_ILL, "32768", 1, 1);
+        helper.checkToken("token ", token, CToken.TK_NUM, "32768", 1, 1);
+    }
+
+    @Test
+    public void decimalNumber32769() {
+        String testString = "32769";
+        inputStream.setInputString(testString);
+        CToken token = tokenizer.getNextToken(cpContext);
+        helper.checkToken("token ", token, CToken.TK_ILL, "32769", 1, 1);
     }
 
     @Test

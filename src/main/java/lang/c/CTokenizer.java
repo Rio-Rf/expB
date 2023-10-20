@@ -14,6 +14,7 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 	private boolean backChExist = false;
 
 	private boolean isMinus; //追加
+	private boolean isAddress; //追加
 
 	public CTokenizer(CTokenRule rule) {
 		this.rule = rule;
@@ -137,8 +138,16 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 						// 数の終わり
 						String text_string = text.toString();
 						int text_int = Integer.parseInt(text_string);
-						if(!isMinus){
-							if(text_int <= 32767){
+						if(isMinus){
+							if(text_int <= 32768){
+								backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
+								tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+								accept = true;
+							} else {
+								state = 2;
+							}
+						}else if(isAddress){
+							if(text_int <= 65535){
 								backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
 								tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
 								accept = true;
@@ -168,6 +177,7 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					break;
 				case 6: // &を読んだ
 					tk = new CToken(CToken.TK_AMP, lineNo, startCol, "&");
+					isAddress = true;
 					accept = true;
 					break;
 				case 101: // /を読んだ
