@@ -19,6 +19,7 @@ import lang.c.CParseContext;
 import lang.c.CToken;
 import lang.c.CTokenRule;
 import lang.c.CTokenizer;
+import lang.c.CType;
 
 /**
  * Before Testing Semantic Check by using this testing class, All ParseTest must be passed.
@@ -61,10 +62,11 @@ public class SemanticCheckAddressTest {
 
     // TestCase02.c を見てどれが正当でどれが不当か考えて以下テストコードの
     // testDataArr に追加してください．
-    // Add 意味解析 正当
+    
+    // Add Sub 意味解析 正当 int
     @Test
-    public void semanticCheckAddressAddAccept() throws FatalErrorException {
-        String[] testDataArr = { "2 + 1", "2 + &1", "&2 + 1" };
+    public void semanticCheckAddressAddSubAcceptInt() throws FatalErrorException {
+        String[] testDataArr = { "2 + 1", "2 - 1", "&2 - &1", "&3 - 1 - &1" };
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
@@ -75,6 +77,28 @@ public class SemanticCheckAddressTest {
             try {
                 cp.parse(cpContext);
                 cp.semanticCheck(cpContext);
+                assertThat(cp.getCType().getType(), is(CType.T_int));
+            } catch ( FatalErrorException e ) {
+                fail("Failed with " + testData + ". Please modify this Testcase to pass.");
+            }
+        } 
+    }
+
+    // Add Sub 意味解析 正当 pint
+    @Test
+    public void semanticCheckAddressAddSubAcceptPint() throws FatalErrorException {
+        String[] testDataArr = { "2 + &1", "&2 + 1", "&2 - 1" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
+            Expression cp = new Expression(cpContext);
+
+            try {
+                cp.parse(cpContext);
+                cp.semanticCheck(cpContext);
+                assertThat(cp.getCType().getType(), is(CType.T_pint));
             } catch ( FatalErrorException e ) {
                 fail("Failed with " + testData + ". Please modify this Testcase to pass.");
             }
@@ -102,6 +126,49 @@ public class SemanticCheckAddressTest {
         } 
     }
 
+    
+
+    // Sub 意味解析 不当
+    @Test
+    public void semanticCheckAddressSubError()  {
+        String[] testDataArr = { "2 - &1", "&3 - &1 - &1" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
+            Expression cp = new Expression(cpContext);
+
+            try {
+                cp.parse(cpContext);
+                cp.semanticCheck(cpContext);
+                fail("Failed with " + testData + ". FatalErrorException should be invoked");
+            } catch ( FatalErrorException e ) {
+                assertThat(e.getMessage(), containsString("左辺の型[int]から右辺の型[int*]は引けません"));
+            }
+        } 
+    }
+    
+    // Add 意味解析 正当
+    @Test
+    public void semanticCheckAddressAddAccept() throws FatalErrorException {
+        String[] testDataArr = { "2 + 1", "2 + &1", "&2 + 1" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
+            Expression cp = new Expression(cpContext);
+
+            try {
+                cp.parse(cpContext);
+                cp.semanticCheck(cpContext);
+            } catch ( FatalErrorException e ) {
+                fail("Failed with " + testData + ". Please modify this Testcase to pass.");
+            }
+        } 
+    }
+
     // Sub 意味解析 正当
     @Test
     public void semanticCheckAddressSubAccept() throws FatalErrorException {
@@ -122,27 +189,6 @@ public class SemanticCheckAddressTest {
         } 
     }
 
-    // Sub 意味解析 不当
-    @Test
-    public void semanticCheckAddressSubError()  {
-        String[] testDataArr = { "2 - &1" };
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
-            Expression cp = new Expression(cpContext);
-
-            try {
-                cp.parse(cpContext);
-                cp.semanticCheck(cpContext);
-                fail("Failed with " + testData + ". FatalErrorException should be invoked");
-            } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("左辺の型[int]から右辺の型[int*]は引けません"));
-            }
-        } 
-    }
-    
     // Sub 意味解析 正当 EX
     @Test
     public void semanticCheckAddressSubAcceptEX() throws FatalErrorException {

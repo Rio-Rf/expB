@@ -55,7 +55,7 @@ public class IsFirstTest_cv02 {
     // isFirst() in "cv02"
     @Test
     public void testFactorAmp() throws FatalErrorException {
-        String[] testDataArr = {"&", "&100"};
+        String[] testDataArr = {"&", "&100", "&0472", "&0xffe0"};
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);

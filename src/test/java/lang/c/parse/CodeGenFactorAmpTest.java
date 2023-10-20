@@ -68,4 +68,26 @@ public class CodeGenFactorAmpTest {
         CParseRule rule = new Factor(cpContext);
         helper.checkCodeGen(expected, rule, cpContext);
     }
+
+    @Test
+    public void codeGenExpressionAmp() throws FatalErrorException {
+        inputStream.setInputString("&3 - 1 - &1"); 
+        String expected[] = {
+            "	MOV	#3, (R6)+",
+            "	MOV	#1, (R6)+",
+            "	MOV	-(R6), R0",
+            "	MOV	-(R6), R1",
+            "	SUB	R0, R1",
+            "	MOV	R1, (R6)+",
+            "	MOV	#1, (R6)+",
+            "	MOV	-(R6), R0",
+            "	MOV	-(R6), R1",
+            "	SUB	R0, R1",
+            "	MOV	R1, (R6)+",
+            };
+
+        // Check only code portion, not validate comments
+        CParseRule rule = new Expression(cpContext);
+        helper.checkCodeGen(expected, rule, cpContext);
+    }
 }

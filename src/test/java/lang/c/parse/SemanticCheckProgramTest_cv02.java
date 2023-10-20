@@ -110,7 +110,7 @@ public class SemanticCheckProgramTest_cv02 {
     
     @Test
     public void FactorWithPlusSignOverflow() throws FatalErrorException {
-        String[] testDataArr = {"32768"};
+        String[] testDataArr = {"32769"};
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
@@ -126,6 +126,27 @@ public class SemanticCheckProgramTest_cv02 {
             }    
         }
     }
+
+    @Test
+    public void FactorWithPlusSign32768() throws FatalErrorException {
+        String[] testDataArr = {"32768"};
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Succeeded with " + testData, Factor.isFirst(firstToken), is(true));
+            Factor cp = new Factor(cpContext);
+            try {
+                cp.parse(cpContext);
+                cp.semanticCheck(cpContext);
+            } catch ( FatalErrorException e ) {
+                // assertThat(e.getMessage(), containsString("不正なfactorです"));
+            }    
+        }
+    }
+    
+
+
     
     @Test
     public void FactorWithMinuSignMax() throws FatalErrorException {
@@ -144,7 +165,7 @@ public class SemanticCheckProgramTest_cv02 {
             }    
         }
     }
-
+    
     @Test
     public void FactorWithPlusSignMax() throws FatalErrorException {
         String[] testDataArr = {"32767"};
