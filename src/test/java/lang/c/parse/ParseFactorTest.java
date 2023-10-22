@@ -5,6 +5,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.fail;
 
+// import java.beans.Expression;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,12 +20,7 @@ import lang.c.CToken;
 import lang.c.CTokenRule;
 import lang.c.CTokenizer;
 
-/**
- * Before Testing Semantic Check by using this testing class, All ParseTest must be passed.
- * Bacause this testing class uses parse method to create testing data.
- */
-public class ParseExpressionTest {
-
+public class ParseFactorTest {
     InputStreamForTest inputStream;
     PrintStreamForTest outputStream;
     PrintStreamForTest errorOutputStream;
@@ -56,68 +53,81 @@ public class ParseExpressionTest {
         setUp();
     }
 
-    // (1) 整数型の扱い
+    // 実験5以降は Program が true ではなくなるのでこのメソッドに @Ignore をつけてください
     @Test
-    public void parseErrorNumPlusNone()  {
-        String[] testDataArr = {"1+"};
+    public void parseRCURWithoutLCUR()  {
+        String[] testDataArr = {"(1+3))"};
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
-            Expression cp = new Expression(cpContext);
+            assertThat("Failed with " + testData, Program.isFirst(firstToken), is(true));
+            Program cp = new Program(cpContext);
 
             try {
                 cp.parse(cpContext);
-                fail("Failed with " + testData + ". FatalErrorException should be invoked");
+                fail("Error should be invoked");
             } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("+の後ろはtermです"));
-            }
-        } 
-    }
-
-    // 実験3以降はこのメソッドを削除してください
-    /*@Test
-    public void parseErrorNoneSubNum()  {
-        String[] testDataArr = {"-3"};
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(false));
-        }
-    }*/
-
-    @Test
-    public void parseErrorNumMinusNone()  {
-        String[] testDataArr = {"3-"};
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
-            Expression cp = new Expression(cpContext);
-
-            try {
-                cp.parse(cpContext);
-                fail("Failed with " + testData + ". FatalErrorException should be invoked");
-            } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("-の後ろはtermです")); // 1+の例を参考にテストコードを書き換えた
+                assertThat(e.getMessage(), containsString("プログラムの最後にゴミがあります"));
             }
         }
     }
 
-    // 実験3以降はこのメソッドを削除してください
-    /*
     @Test
-    public void parseErrorOnlyPlus()  {
-        String[] testDataArr = {"+"};
+    public void parseNotCloseRPAR() {
+        String[] testDataArr = {"((1+3)"};
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(false));
+            assertThat("Failed with " + testData, UnsignedFactor.isFirst(firstToken), is(true));
+            UnsignedFactor cp = new UnsignedFactor(cpContext);
+
+            try {
+                cp.parse(cpContext);
+                fail("Error should be invoked");
+            } catch ( FatalErrorException e ) {
+                assertThat(e.getMessage(), containsString("expressionの後ろは')'です"));
+            }
         }
     }
-    */
+
+    @Test
+    public void parseOnlyLPAR() {
+        String[] testDataArr = {"("};
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, UnsignedFactor.isFirst(firstToken), is(true));
+            UnsignedFactor cp = new UnsignedFactor(cpContext);
+
+            try {
+                cp.parse(cpContext);
+                fail("Error should be invoked");
+            } catch ( FatalErrorException e ) {
+                assertThat(e.getMessage(), containsString("'('の後ろはexpressionです"));
+            }
+        }
+    }
+
+    @Test
+    public void parseOnlyMinusFactor() {
+        String[] testDataArr = {"-"};
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, Factor.isFirst(firstToken), is(true));
+            Factor cp = new Factor(cpContext);
+
+            try {
+                cp.parse(cpContext);
+                fail("Error should be invoked");
+            } catch ( FatalErrorException e ) {
+                assertThat(e.getMessage(), containsString("不正なminusFactorです"));
+            }
+        }
+    }
+
 }

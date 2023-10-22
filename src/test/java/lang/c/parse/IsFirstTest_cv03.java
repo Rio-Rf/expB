@@ -2,8 +2,6 @@ package lang.c.parse;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Before;
@@ -18,11 +16,8 @@ import lang.c.CToken;
 import lang.c.CTokenRule;
 import lang.c.CTokenizer;
 
-/**
- * Before Testing Semantic Check by using this testing class, All ParseTest must be passed.
- * Bacause this testing class uses parse method to create testing data.
- */
-public class ParseExpressionTest {
+public class IsFirstTest_cv03 {
+    // Test that each class's isFirst() is valid
 
     InputStreamForTest inputStream;
     PrintStreamForTest outputStream;
@@ -56,68 +51,61 @@ public class ParseExpressionTest {
         setUp();
     }
 
-    // (1) 整数型の扱い
     @Test
-    public void parseErrorNumPlusNone()  {
-        String[] testDataArr = {"1+"};
+    public void testPlusFactor() throws FatalErrorException {
+        String[] testDataArr = { "+13" };
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
-            Expression cp = new Expression(cpContext);
-
-            try {
-                cp.parse(cpContext);
-                fail("Failed with " + testData + ". FatalErrorException should be invoked");
-            } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("+の後ろはtermです"));
-            }
-        } 
-    }
-
-    // 実験3以降はこのメソッドを削除してください
-    /*@Test
-    public void parseErrorNoneSubNum()  {
-        String[] testDataArr = {"-3"};
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(false));
-        }
-    }*/
-
-    @Test
-    public void parseErrorNumMinusNone()  {
-        String[] testDataArr = {"3-"};
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true));
-            Expression cp = new Expression(cpContext);
-
-            try {
-                cp.parse(cpContext);
-                fail("Failed with " + testData + ". FatalErrorException should be invoked");
-            } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("-の後ろはtermです")); // 1+の例を参考にテストコードを書き換えた
-            }
+            assertThat(testData, PlusFactor.isFirst(firstToken), is(true));    
         }
     }
 
-    // 実験3以降はこのメソッドを削除してください
-    /*
     @Test
-    public void parseErrorOnlyPlus()  {
-        String[] testDataArr = {"+"};
+    public void testMinusFactor() throws FatalErrorException {
+        String[] testDataArr = { "-13" };
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(false));
+            assertThat(testData, MinusFactor.isFirst(firstToken), is(true));    
         }
     }
-    */
+    
+    // 2回 getNextToken をして，焦点が 記号 に合うようにしてある
+    @Test
+    public void testTermMult() throws FatalErrorException {
+        String[] testDataArr = { "2*3" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            firstToken = tokenizer.getNextToken(cpContext);
+            assertThat(testData, TermMult.isFirst(firstToken), is(true));    
+        }
+    }
+
+    @Test
+    public void testTermDiv() throws FatalErrorException {
+        String[] testDataArr = { "2/3" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            firstToken = tokenizer.getNextToken(cpContext);
+            assertThat(testData, TermDiv.isFirst(firstToken), is(true));    
+        }
+    }
+
+    @Test
+    public void testTermCV03() throws FatalErrorException {
+        String[] testDataArr = { "1", "+1", "-1", "(1)", "&" };
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat(testData, Term.isFirst(firstToken), is(true));    
+        }
+    }
 }

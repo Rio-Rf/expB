@@ -104,12 +104,22 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 						startCol = colNo - 1;
 						text.append(ch);
 						state = 5;
+					} else if (ch == '*') {
+						startCol = colNo - 1;
+						text.append(ch);
+						state = 6;
 					} else if (ch == '/') {
 						startCol = colNo - 1;
-						state = 101;
+						state = 7;
+					} else if (ch == '(') {
+						startCol = colNo - 1;
+						state = 8;
+					} else if (ch == ')') {
+						startCol = colNo - 1;
+						state = 9;
 					} else if (ch == '&') {
 						startCol = colNo - 1;
-						state = 6;
+						state = 10;
 					} else { // ヘンな文字を読んだ
 						startCol = colNo - 1;
 						text.append(ch);
@@ -175,51 +185,64 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					isMinus = true;
 					accept = true;
 					break;
-				case 6: // &を読んだ
+				case 6: // *を読んだ
+					tk = new CToken(CToken.TK_MULT, lineNo, startCol, "*");
+					accept = true;
+					break;
+				case 7: // /を読んだ
+					ch = readChar();
+					if (ch == '/') {
+						state = 101;
+					} else if (ch == '*') {
+						state = 102;
+					}else{
+						backChar(ch);
+						tk = new CToken(CToken.TK_DIV, lineNo, startCol, "/");
+						accept = true;
+						break;
+					}
+					break;
+				case 8: // (を読んだ
+					tk = new CToken(CToken.TK_LPAR, lineNo, startCol, "(");
+					accept = true;
+					break;
+				case 9: // *を読んだ
+					tk = new CToken(CToken.TK_RPAR, lineNo, startCol, ")");
+					accept = true;
+					break;
+				case 10: // &を読んだ
 					tk = new CToken(CToken.TK_AMP, lineNo, startCol, "&");
 					isAddress = true;
 					accept = true;
 					break;
-				case 101: // /を読んだ
-					ch = readChar();
-					if (ch == (char) -1) { // EOF
-						state = 1;
-					}else if (ch == '/') {
-						state = 102;
-					} else if (ch == '*') {
-						state = 103;
-					}else{
-						state = 2;
-					}
-					break;
-				case 102: // /を2連続で読んだ
+				case 101: // /を2連続で読んだ
 					ch = readChar();
 					if (ch == (char) -1) { // EOF
 						state = 1;
 					}else if (ch == '\n') { //改行
 						state = 0;
 					}else{
-						state = 102;
+						state = 101;
 					}
 					break;
-				case 103: // /*を読んだ
+				case 102: // /*を読んだ
 					ch = readChar();
 					if (ch == (char) -1) { // EOF
 						state = 1;
 					}else if (ch == '*') { 
-						state = 104;
-					}else{
 						state = 103;
+					}else{
+						state = 102;
 					}
 					break;
-				case 104: // /**を読んだ
+				case 103: // /**を読んだ
 					ch = readChar();
 					if (ch == (char) -1) { // EOF
 						state = 1;
 					}else if (ch == '/') { 
 						state = 0;
 					}else if (ch == '*') { 
-						state = 104;
+						state = 103;
 					}else{ // 閉じていないコメントはEOFが出るはず
 						state = 1;
 					}
