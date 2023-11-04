@@ -39,7 +39,7 @@ public class MinusFactor extends CParseRule {
 				setCType(unsignedFactor.getCType()); // unsignedFactor の型をそのままコピー
 				setConstant(unsignedFactor.isConstant()); // unsignedFactor は常に定数
 			}else{
-				pcx.fatalError(op.toExplainString() + "不正なFactorAmpです");
+				pcx.fatalError(op.toExplainString() + "不正なMinusFactorです");
 			}
 		}
 	}

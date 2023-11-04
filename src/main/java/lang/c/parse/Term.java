@@ -6,7 +6,7 @@ import lang.*;
 import lang.c.*;
 
 public class Term extends CParseRule {
-	// term ::= factor { termMult | termDiv }
+	// term ::= factor { termMult | termDiv } // {}繰り返し
 	CParseRule term;
 
 	public Term(CParseContext pcx) {

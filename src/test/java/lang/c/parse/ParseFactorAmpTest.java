@@ -5,6 +5,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.fail;
 
+// import java.beans.Expression;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,12 +20,7 @@ import lang.c.CToken;
 import lang.c.CTokenRule;
 import lang.c.CTokenizer;
 
-/**
- * Before Testing Semantic Check by using this testing class, All ParseTest must be passed.
- * Bacause this testing class uses parse method to create testing data.
- */
-public class ParseAddressTest {
-
+public class ParseFactorAmpTest { // 追加 cv04
     InputStreamForTest inputStream;
     PrintStreamForTest outputStream;
     PrintStreamForTest errorOutputStream;
@@ -57,22 +54,21 @@ public class ParseAddressTest {
     }
 
     @Test
-    public void parseAddressOnlyAMP()  {
-        String[] testDataArr = {"1+&"};
+    public void parseAndMult() {
+        String[] testDataArr = {"&*i_pa"};
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true)); //ここはexpressionのまま
-            Expression cp = new Expression(cpContext); //ここはexpressionのまま
+            assertThat("Failed with " + testData, FactorAmp.isFirst(firstToken), is(true));
+            FactorAmp cp = new FactorAmp(cpContext);
 
-            try { //エラーが発生すべきというエラー
+            try {
                 cp.parse(cpContext);
-                fail("Failed with " + testData + ". FatalErrorException should be invoked");
+                fail("Error should be invoked");
             } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("&の後ろはnumberまたはprimaryです"));
+                assertThat(e.getMessage(), containsString("&の後ろにPrimaryMultは不適です"));
             }
-        } 
+        }
     }
-
 }
