@@ -6,19 +6,22 @@ import lang.*;
 import lang.c.*;
 
 public class UnsignedFactor extends CParseRule {
-	// unsignedFactor ::= factorAmp | number | LPAR expression RPAR
+	// unsignedFactor ::= factorAmp | number | LPAR expression RPAR | addressToValue
 	CParseRule number;
 	CParseRule factorAmp;
 	CParseRule expression;
+	CParseRule addressToValue;
 
 	public UnsignedFactor(CParseContext pcx) {
 	}
 
-	public static boolean isFirst(CToken tk) { // & or number or (
+	public static boolean isFirst(CToken tk) { // & or number or ( or addressToValue
 		if(FactorAmp.isFirst(tk)){
 			return FactorAmp.isFirst(tk);
 		}else if(Number.isFirst(tk)){
 			return Number.isFirst(tk);
+		}else if(AddressToValue.isFirst(tk)){
+			return AddressToValue.isFirst(tk);
 		}else{
 			return tk.getType() == CToken.TK_LPAR;
 		}
@@ -34,6 +37,9 @@ public class UnsignedFactor extends CParseRule {
 		}else if(FactorAmp.isFirst(tk)){ // 先頭が&
 			factorAmp = new FactorAmp(pcx); // ここで新しく宣言してる
 			factorAmp.parse(pcx); // factorAmpのparseチェック
+		}else if(AddressToValue.isFirst(tk)){ // 先頭がprimary
+			addressToValue = new AddressToValue(pcx); // ここで新しく宣言してる
+			addressToValue.parse(pcx); // addressToValueのparseチェック
 		}else{
 			if(tk.getType() != CToken.TK_LPAR)
 				pcx.fatalError(tk.toExplainString() + "不正なunsignedFactorです");
@@ -58,6 +64,10 @@ public class UnsignedFactor extends CParseRule {
 			factorAmp.semanticCheck(pcx);
 			setCType(factorAmp.getCType());
 			setConstant(factorAmp.isConstant());
+		} else if(addressToValue != null){ // 追加
+			addressToValue.semanticCheck(pcx);
+			setCType(addressToValue.getCType());
+			setConstant(addressToValue.isConstant());
 		} else if(expression != null){ // 追加
 			expression.semanticCheck(pcx);
 			setCType(expression.getCType());
@@ -72,6 +82,8 @@ public class UnsignedFactor extends CParseRule {
 			number.codeGen(pcx);
 		} else if(factorAmp != null){ // 追加
 			factorAmp.codeGen(pcx);
+		} else if(addressToValue != null){ // 追加
+			addressToValue.codeGen(pcx);
 		} else if(expression != null){ // 追加
 			expression.codeGen(pcx);
 		}

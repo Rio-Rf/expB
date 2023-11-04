@@ -33,7 +33,7 @@ public class Expression extends CParseRule {
 			}
 			list.parse(pcx);
 			term = list;
-			tk = ct.getCurrentToken(pcx);
+			tk = ct.getCurrentToken(pcx); // おそらく次のトークンを読んでる. でないとずっと同じトークンを読み続ける
 		}
 		expression = term;
 	}

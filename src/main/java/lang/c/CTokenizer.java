@@ -120,6 +120,16 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					} else if (ch == '&') {
 						startCol = colNo - 1;
 						state = 10;
+					} else if (ch == '[') {
+						startCol = colNo - 1;
+						state = 11;
+					} else if (ch == ']') {
+						startCol = colNo - 1;
+						state = 12;
+					} else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') { // ident
+						startCol = colNo - 1;
+						text.append(ch);
+						state = 301;
 					} else { // ヘンな文字を読んだ
 						startCol = colNo - 1;
 						text.append(ch);
@@ -206,12 +216,22 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					tk = new CToken(CToken.TK_LPAR, lineNo, startCol, "(");
 					accept = true;
 					break;
-				case 9: // *を読んだ
+				case 9: // )を読んだ
 					tk = new CToken(CToken.TK_RPAR, lineNo, startCol, ")");
 					accept = true;
 					break;
 				case 10: // &を読んだ
 					tk = new CToken(CToken.TK_AMP, lineNo, startCol, "&");
+					isAddress = true;
+					accept = true;
+					break;
+				case 11: // [を読んだ
+					tk = new CToken(CToken.TK_LBRA, lineNo, startCol, "[");
+					isAddress = true;
+					accept = true;
+					break;
+				case 12: // ]を読んだ
+					tk = new CToken(CToken.TK_RBRA, lineNo, startCol, "]");
 					isAddress = true;
 					accept = true;
 					break;
@@ -336,6 +356,17 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 				    }else{ // 0x0
 						backChar(ch); // 数を表さない文字は戻す（読まなかったことにする）
 						tk = new CToken(CToken.TK_NUM, lineNo, startCol, text.toString());
+						accept = true;
+					}	
+					break;
+				case 301: // ident 二文字目以降
+					ch = readChar();
+					if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') {
+						text.append(ch);
+				    }else{
+						// identの終わり
+						backChar(ch); // 読まなかったことにする
+						tk = new CToken(CToken.TK_IDENT, lineNo, startCol, text.toString());
 						accept = true;
 					}	
 					break;

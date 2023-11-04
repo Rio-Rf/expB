@@ -14,15 +14,17 @@ import lang.IOContext;
 import lang.InputStreamForTest;
 import lang.PrintStreamForTest;
 import lang.c.CParseContext;
+import lang.c.CParseRule;
 import lang.c.CToken;
 import lang.c.CTokenRule;
 import lang.c.CTokenizer;
+import lang.c.CType;
 
 /**
  * Before Testing Semantic Check by using this testing class, All ParseTest must be passed.
  * Bacause this testing class uses parse method to create testing data.
  */
-public class ParseAddressTest {
+public class SemanticCheckPrimaryTest {
 
     InputStreamForTest inputStream;
     PrintStreamForTest outputStream;
@@ -57,22 +59,38 @@ public class ParseAddressTest {
     }
 
     @Test
-    public void parseAddressOnlyAMP()  {
-        String[] testDataArr = {"1+&"};
+    public void PrimaryNoError() throws FatalErrorException {
+        String[] testDataArr = {"*ip_ABC", "*ipa_ABC[128]", "ipa_ABC[128]"};
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat("Failed with " + testData, Expression.isFirst(firstToken), is(true)); //ここはexpressionのまま
-            Expression cp = new Expression(cpContext); //ここはexpressionのまま
+            assertThat("Failed with " + testData, Primary.isFirst(firstToken), is(true));
+            Primary cp = new Primary(cpContext);
 
-            try { //エラーが発生すべきというエラー
-                cp.parse(cpContext);
-                fail("Failed with " + testData + ". FatalErrorException should be invoked");
-            } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("&の後ろはnumberまたはprimaryです"));
-            }
+            cp.parse(cpContext);
+            cp.semanticCheck(cpContext);
+            String errorOutput = errorOutputStream.getPrintBufferString();
+            assertThat(errorOutput, is(""));    
         } 
     }
 
+    @Test
+    public void PrimaryWithError() throws FatalErrorException {
+        String[] testDataArr = {"*i_ABC", "*ia_ABC[128]"};
+        for ( String testData: testDataArr ) {
+            resetEnvironment();
+            inputStream.setInputString(testData);
+            CToken firstToken = tokenizer.getNextToken(cpContext);
+            assertThat("Failed with " + testData, Factor.isFirst(firstToken), is(true));
+            Primary cp = new Primary(cpContext);
+            try {
+                cp.parse(cpContext);
+                cp.semanticCheck(cpContext);
+                fail("Failed with " + testData);
+            } catch ( FatalErrorException e ) {
+                assertThat(e.getMessage(), containsString("int")); // *の後にint型は不適です
+            }    
+        }
+    }
 }

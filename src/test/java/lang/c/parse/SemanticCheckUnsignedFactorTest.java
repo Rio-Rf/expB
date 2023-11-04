@@ -67,7 +67,7 @@ public class SemanticCheckUnsignedFactorTest {
                 cp.semanticCheck(cpContext);
                 fail("Failed with " + testData + ". FatalErrorException should be invoked");
             } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("不正なFactorAmpです"));
+                assertThat(e.getMessage(), containsString("不正なMinusFactorです"));
             }
         }
     }
