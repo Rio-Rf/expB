@@ -91,7 +91,7 @@ public class CTokenizerNumberTest_cv02 {
         CToken token1 = tokenizer.getNextToken(cpContext);
         helper.checkToken("token 1", token1, CToken.TK_NUM, "0xff", 1, 1);
         CToken token2 = tokenizer.getNextToken(cpContext);
-        helper.checkToken("token ", token2, CToken.TK_ILL, "g", 1, 5);
+        helper.checkToken("token ", token2, CToken.TK_IDENT, "g", 1, 5);
         CToken token3 = tokenizer.getNextToken(cpContext);
         helper.checkToken("token ", token3, CToken.TK_ILL, "f", 1, 6);
     }

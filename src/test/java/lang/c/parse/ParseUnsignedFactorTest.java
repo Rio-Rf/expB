@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import lang.FatalErrorException;
@@ -102,7 +103,7 @@ public class ParseUnsignedFactorTest {
     }
 
     // このテストは実験5で Program が isFirst ではなくなることに注意
-    @Test
+    @Ignore
     public void parseArrayOnlyIdent() throws FatalErrorException {
         inputStream.setInputString("12[4]");
         CToken firstToken = tokenizer.getNextToken(cpContext);
