@@ -5,10 +5,8 @@ import static org.hamcrest.Matchers.is;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import lang.FatalErrorException;
 import lang.IOContext;
 import lang.InputStreamForTest;
 import lang.PrintStreamForTest;
@@ -17,7 +15,9 @@ import lang.c.CToken;
 import lang.c.CTokenRule;
 import lang.c.CTokenizer;
 
-public class IsFirstProgramTest {
+public class IsFirstTest_cv05 {
+    // Test that each class's isFirst() is valid
+    // Distant future, you should add necessary test cases to each Test code.
 
     InputStreamForTest inputStream;
     PrintStreamForTest outputStream;
@@ -51,26 +51,14 @@ public class IsFirstProgramTest {
         setUp();
     }
 
-    
-    @Ignore
-    public void testProgram01() throws FatalErrorException {
-        String[] testDataArr = {"13"};
-        for ( String testData: testDataArr ) {
-            resetEnvironment();
-            inputStream.setInputString(testData);
-            CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat(testData, Program.isFirst(firstToken), is(true));    
-        }
-    }
-
     @Test
-    public void testWithUndefinedToken() throws FatalErrorException {
-        String[] testDataArr = {"@2+2"};
+    public void testStatementAssign() {
+        String[] testDataArr = { "*A_BC12", "A_BC12"};
         for ( String testData: testDataArr ) {
             resetEnvironment();
             inputStream.setInputString(testData);
             CToken firstToken = tokenizer.getNextToken(cpContext);
-            assertThat(testData, Program.isFirst(firstToken), is(false));    
+            assertThat(testData, StatementAssign.isFirst(firstToken), is(true));    
         }
     }
 }

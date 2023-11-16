@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.containsString;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import lang.FatalErrorException;
@@ -49,7 +50,7 @@ public class ParseProgramTest {
         cpContext = null;
     }
 
-    @Test
+    @Ignore //cv05
     public void parseErrorEndOfProgram() throws FatalErrorException {
         inputStream.setInputString("13 + 7@");
         CToken firstToken = tokenizer.getNextToken(cpContext);

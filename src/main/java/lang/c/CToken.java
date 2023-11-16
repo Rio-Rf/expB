@@ -17,7 +17,7 @@ public class CToken extends SimpleToken {
 	// add chapter4
 	public static final int TK_LBRA     = 9;    // [
 	public static final int TK_RBRA     = 10;   // ]
-	// public static final int TK_IDENT    = 11;   // ident はすでに SimpleToken.java で実装済み
+	// public static final int TK_IDENT    = 11;   // ident はすでに SimpleToken.java で実装済み なんかコメントアウトしてあったけど外さないとTokentest通らんcv05
 	// add chapter5
 	public static final int TK_ASSIGN 	= 12;	// =
 	public static final int TK_SEMI    	= 13;	// ;

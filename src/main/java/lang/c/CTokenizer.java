@@ -126,6 +126,12 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					} else if (ch == ']') {
 						startCol = colNo - 1;
 						state = 12;
+					} else if (ch == '=') {
+						startCol = colNo - 1;
+						state = 13;
+					} else if (ch == ';') {
+						startCol = colNo - 1;
+						state = 14;
 					} else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') { // ident
 						startCol = colNo - 1;
 						text.append(ch);
@@ -232,6 +238,16 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					break;
 				case 12: // ]を読んだ
 					tk = new CToken(CToken.TK_RBRA, lineNo, startCol, "]");
+					isAddress = true;
+					accept = true;
+					break;
+				case 13: // =を読んだ
+					tk = new CToken(CToken.TK_ASSIGN, lineNo, startCol, "=");
+					isAddress = true;
+					accept = true;
+					break;
+				case 14: // ;を読んだ
+					tk = new CToken(CToken.TK_SEMI, lineNo, startCol, ";");
 					isAddress = true;
 					accept = true;
 					break;

@@ -56,6 +56,7 @@ public class Variable extends CParseRule {
 					pcx.fatalError("ipa_は整数の変数名として不適です");
 				else
 					this.setCType(ident.getCType());
+					setConstant(ident.isConstant());
 			}
 		}
 	}

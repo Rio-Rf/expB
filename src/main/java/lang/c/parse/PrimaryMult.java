@@ -38,7 +38,7 @@ class PrimaryMult extends CParseRule {
 		if (variable != null) {
 			variable.semanticCheck(pcx);
 			if(variable.getCType().getType() == CType.T_int){ 
-				pcx.fatalError(op.toExplainString() + "*の後にint型は不適です");
+				pcx.fatalError(op.toExplainString() + "*の後はpint型です");
 			}else{
 				this.setCType(CType.getCType(CType.T_int)); // *ip_ABC, *ipa_ABC[123]とか 非定数
 			}

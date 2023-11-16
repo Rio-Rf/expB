@@ -42,6 +42,7 @@ public class Primary extends CParseRule {
 		if (primaryMult != null) {
 			primaryMult.semanticCheck(pcx);
 			setCType(primaryMult.getCType()); // primaryMult の型をそのままコピー
+			setConstant(primaryMult.isConstant()); // ここは微妙
 		} else if(variable != null){
 			variable.semanticCheck(pcx);
 			setCType(variable.getCType());
