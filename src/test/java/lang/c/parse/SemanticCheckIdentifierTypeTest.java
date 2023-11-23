@@ -75,7 +75,7 @@ public class SemanticCheckIdentifierTypeTest {
                 cp.semanticCheck(cpContext);
                 fail("Failed with " + testData + ". FatalErrorException should be invoked");
             } catch ( FatalErrorException e ) {
-                assertThat(e.getMessage(), containsString("*の後にint型は不適です"));
+                assertThat(e.getMessage(), containsString("*の後はpint型です"));
             }
         } 
     }
