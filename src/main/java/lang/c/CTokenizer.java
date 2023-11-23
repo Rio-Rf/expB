@@ -132,6 +132,16 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					} else if (ch == ';') {
 						startCol = colNo - 1;
 						state = 14;
+					} else if (ch == '<') {
+						startCol = colNo - 1;
+						state = 15;
+					} else if (ch == '>') {
+						startCol = colNo - 1;
+						state = 16;
+					} else if (ch == '!') {
+						text.append(ch);
+						startCol = colNo - 1;
+						state = 17;
 					} else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') { // ident
 						startCol = colNo - 1;
 						text.append(ch);
@@ -242,14 +252,52 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 					accept = true;
 					break;
 				case 13: // =を読んだ
-					tk = new CToken(CToken.TK_ASSIGN, lineNo, startCol, "=");
-					isAddress = true;
-					accept = true;
+					ch = readChar();
+					if (ch == '=') {
+						state = 403;
+					} else {
+						backChar(ch);
+						tk = new CToken(CToken.TK_ASSIGN, lineNo, startCol, "=");
+						isAddress = true;
+						accept = true;
+						break;
+					}
 					break;
 				case 14: // ;を読んだ
 					tk = new CToken(CToken.TK_SEMI, lineNo, startCol, ";");
 					isAddress = true;
 					accept = true;
+					break;
+				case 15: // <を読んだ
+					ch = readChar();
+					if (ch == '=') {
+						state = 401;
+					} else {
+						backChar(ch);
+						tk = new CToken(CToken.TK_LT, lineNo, startCol, "<");
+						accept = true;
+						break;
+					}
+					break;
+				case 16: // >を読んだ
+					ch = readChar();
+					if (ch == '=') {
+						state = 402;
+					} else {
+						backChar(ch);
+						tk = new CToken(CToken.TK_GT, lineNo, startCol, ">");
+						accept = true;
+						break;
+					}
+					break;
+				case 17: // !を読んだ
+					ch = readChar();
+					if (ch == '=') {
+						state = 404;
+					} else {
+						backChar(ch);
+						state = 2;
+					}
 					break;
 				case 101: // /を2連続で読んだ
 					ch = readChar();
@@ -382,10 +430,30 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 				    }else{
 						// identの終わり
 						backChar(ch); // 読まなかったことにする
-						tk = new CToken(CToken.TK_IDENT, lineNo, startCol, text.toString());
+						String s = text.toString();
+						Integer i = (Integer) rule.get(s);
+						// 切り出した字句が登録済みキーワードかどうかは i が null かどうかで判定する
+						tk = new CToken(((i == null) ? CToken.TK_IDENT : i.intValue()), lineNo, startCol, s);
+						// tk = new CToken(CToken.TK_IDENT, lineNo, startCol, text.toString());
 						accept = true;
 					}	
 					break;
+				case 401: // <= を読んだ	
+					tk = new CToken(CToken.TK_LE, lineNo, startCol, "<=");
+					accept = true;
+					break;
+				case 402: // >= を読んだ	
+					tk = new CToken(CToken.TK_GE, lineNo, startCol, ">=");
+					accept = true;
+					break;
+				case 403: // == を読んだ	
+					tk = new CToken(CToken.TK_EQ, lineNo, startCol, "==");
+					accept = true;
+					break;	
+				case 404: // != を読んだ	
+					tk = new CToken(CToken.TK_NE, lineNo, startCol, "!=");
+					accept = true;
+					break;	
 			}
 		}
 		return tk;
