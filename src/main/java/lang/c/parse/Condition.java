@@ -45,8 +45,10 @@ class Condition extends CParseRule {
 		op = ct.getCurrentToken(pcx); // TRUE or FALSE or expression
 		if(op.getType() == CToken.TK_TRUE){
 			flagT = true;
+			op = ct.getNextToken(pcx);
 		}else if(op.getType() == CToken.TK_FALSE){
 			flagF = true;
+			op = ct.getNextToken(pcx);
 		}
 		if(Expression.isFirst(op)){
 			expression = new Expression(pcx);
