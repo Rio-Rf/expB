@@ -7,7 +7,7 @@ import java.io.PrintStream;
 import lang.*;
 
 public class CTokenizer extends Tokenizer<CToken, CParseContext> {
-	@SuppressWarnings("unused")
+	//@SuppressWarnings("unused")
 	private CTokenRule rule;
 	private int lineNo, colNo;
 	private char backCh;
@@ -142,6 +142,14 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 						text.append(ch);
 						startCol = colNo - 1;
 						state = 17;
+					} else if (ch == '{') {
+						text.append(ch);
+						startCol = colNo - 1;
+						state = 18;
+					} else if (ch == '}') {
+						text.append(ch);
+						startCol = colNo - 1;
+						state = 19;
 					} else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') { // ident
 						startCol = colNo - 1;
 						text.append(ch);
@@ -298,6 +306,16 @@ public class CTokenizer extends Tokenizer<CToken, CParseContext> {
 						backChar(ch);
 						state = 2;
 					}
+					break;
+				case 18: // {を読んだ
+					tk = new CToken(CToken.TK_LCUR, lineNo, startCol, "{");
+					isAddress = true;
+					accept = true;
+					break;
+				case 19: // }を読んだ
+					tk = new CToken(CToken.TK_RCUR, lineNo, startCol, "}");
+					isAddress = true;
+					accept = true;
 					break;
 				case 101: // /を2連続で読んだ
 					ch = readChar();
